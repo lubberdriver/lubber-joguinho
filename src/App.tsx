@@ -1,6 +1,5 @@
-// App.tsx (corrigido)
+import { Routes, Route } from "react-router-dom";
 import JogarToken from "./pages/JogarToken";
-import { Route, Routes } from "react-router-dom";
 
 export default function App() {
   return (
