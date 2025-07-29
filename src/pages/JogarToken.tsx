@@ -11,26 +11,48 @@ export default function JogarToken() {
   const [ganhou, setGanhou] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const verificarToken = async () => {
-      if (!token) return;
+  const verificarToken = async () => {
+    if (!token) {
+      console.log("Token ausente na URL");
+      return;
+    }
 
-      const ref = doc(db, "jogosPendentes", token);
-      const snap = await getDoc(ref);
+    const ref = doc(db, "jogosPendentes", token);
+    const snap = await getDoc(ref);
 
-      if (!snap.exists()) return setStatus("erro");
+    if (!snap.exists()) {
+      console.log("Token não encontrado no Firestore.");
+      return setStatus("erro");
+    }
 
-      const data = snap.data();
-      const agora = Timestamp.now();
+    const data = snap.data();
+    const agora = Timestamp.now();
 
-      if (data.usado) return setStatus("usado");
-      if (data.expiraEm.toMillis() < agora.toMillis()) return setStatus("expirado");
+    console.log("Dados do documento:", data);
 
-      await updateDoc(ref, { usado: true });
-      setStatus("valido");
-    };
+    if (data.usado) {
+      console.log("Token já foi usado.");
+      return setStatus("usado");
+    }
 
-    verificarToken();
-  }, [token]);
+    if (!data.expiraEm || typeof data.expiraEm.toMillis !== "function") {
+      console.log("expiraEm não é um Timestamp válido:", data.expiraEm);
+      return setStatus("erro");
+    }
+
+    if (data.expiraEm.toMillis() < agora.toMillis()) {
+      console.log("Token expirado.");
+      return setStatus("expirado");
+    }
+
+    console.log("Token válido. Marcando como usado...");
+    await updateDoc(ref, { usado: true });
+    setStatus("valido");
+  };
+
+  verificarToken();
+}, [token]);
+
 
   const premioIndex = Math.floor(Math.random() * 3);
 
